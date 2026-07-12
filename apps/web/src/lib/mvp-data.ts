@@ -1,4 +1,15 @@
-export interface PodcastSummary {
+export type Episode = {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  duration: string;
+  audioUrl: string;
+  publishedAt: string;
+  podcastSlug: string;
+};
+
+export type Podcast = {
   id: string;
   slug: string;
   title: string;
@@ -7,10 +18,10 @@ export interface PodcastSummary {
   category: string;
   image: string;
   accent: string;
-  episodeCount: number;
-}
+  episodes: Episode[];
+};
 
-const podcasts = [
+export const podcasts: Podcast[] = [
   {
     id: 'pod-1',
     slug: 'maker-hour',
@@ -92,60 +103,47 @@ const podcasts = [
   },
 ];
 
-export class PodcastsService {
-  findAll() {
-    return podcasts.map((podcast) => ({
-      ...podcast,
-      episodeCount: podcast.episodes.length,
-    }));
+export const channels = Array.from(new Set(podcasts.map((podcast) => podcast.channel)));
+export const categories = Array.from(new Set(podcasts.map((podcast) => podcast.category)));
+
+export function getPodcastBySlug(slug: string) {
+  return podcasts.find((podcast) => podcast.slug === slug);
+}
+
+export function getEpisodeBySlug(slug: string) {
+  return podcasts.flatMap((podcast) => podcast.episodes).find((episode) => episode.slug === slug);
+}
+
+export function searchContent(term: string) {
+  const normalized = term.trim().toLowerCase();
+  if (!normalized) {
+    return { podcasts, episodes: podcasts.flatMap((podcast) => podcast.episodes), channels };
   }
 
-  findBySlug(slug: string) {
-    return podcasts.find((podcast) => podcast.slug === slug);
-  }
-
-  findEpisodes() {
-    return podcasts.flatMap((podcast) => podcast.episodes);
-  }
-
-  findEpisodeBySlug(slug: string) {
-    return podcasts.flatMap((podcast) => podcast.episodes).find((episode) => episode.slug === slug);
-  }
-
-  search(term: string) {
-    const normalized = term.trim().toLowerCase();
-    if (!normalized) {
-      return {
-        podcasts: this.findAll(),
-        episodes: this.findEpisodes(),
-        channels: Array.from(new Set(podcasts.map((podcast) => podcast.channel))),
-      };
-    }
-
-    return {
-      podcasts: this.findAll().filter((podcast) => {
-        const haystack =
-          `${podcast.title} ${podcast.description} ${podcast.channel} ${podcast.category}`.toLowerCase();
-        return haystack.includes(normalized);
-      }),
-      episodes: this.findEpisodes().filter((episode) => {
+  return {
+    podcasts: podcasts.filter((podcast) => {
+      const haystack =
+        `${podcast.title} ${podcast.description} ${podcast.channel} ${podcast.category}`.toLowerCase();
+      return haystack.includes(normalized);
+    }),
+    episodes: podcasts
+      .flatMap((podcast) => podcast.episodes)
+      .filter((episode) => {
         const haystack =
           `${episode.title} ${episode.description} ${episode.podcastSlug}`.toLowerCase();
         return haystack.includes(normalized);
       }),
-      channels: Array.from(new Set(podcasts.map((podcast) => podcast.channel))).filter((channel) =>
-        channel.toLowerCase().includes(normalized),
-      ),
-    };
-  }
+    channels: channels.filter((channel) => channel.toLowerCase().includes(normalized)),
+  };
+}
 
-  getHome() {
-    return {
-      featuredPodcasts: this.findAll().slice(0, 2),
-      latestEpisodes: this.findEpisodes().slice(0, 4),
-      continueListening: this.findEpisodes().slice(0, 2),
-      categories: Array.from(new Set(podcasts.map((podcast) => podcast.category))),
-      channels: Array.from(new Set(podcasts.map((podcast) => podcast.channel))),
-    };
-  }
+export function getHomeData() {
+  const latestEpisodes = podcasts.flatMap((podcast) => podcast.episodes).slice(0, 4);
+  return {
+    featuredPodcasts: podcasts.slice(0, 2),
+    latestEpisodes,
+    continueListening: latestEpisodes.slice(0, 2),
+    categories,
+    channels,
+  };
 }
