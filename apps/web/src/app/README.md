@@ -1,13 +1,14 @@
-# app
+# Web app structure
 
-This folder contains the Next.js App Router entry points.
+This app hosts the MVP podcast experience and keeps future platform surfaces as architectural placeholders.
 
-## Purpose
-- defines route segments and page entry files
-- keeps routing concerns isolated from business logic
-- enables server and client component boundaries
-
-## Structure
-- layout.tsx and page.tsx files
-- route-specific folders
-- global providers and root layout
+## Routes
+- /login
+- /register
+- /podcasts
+- /episodes
+- /search
+- /profile
+- /channel
+- /dashboard
+- /settings
